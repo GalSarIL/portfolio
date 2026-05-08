@@ -1,5 +1,2 @@
-name = "lively-block-dcd0"
-compatibility_date = "2026-05-07"
-
-[assets]
-directory = "./site/"
+name = "galsaril"
+pages_build_output_dir = "./site/"
