@@ -2,7 +2,8 @@
 
 Professional homepage for Gal Sar Israel - DevOps, Automation & Test Engineer.
 
-Live at: **https://galsaril.com**
+Live at: **https://galsaril.com** | **https://www.galsaril.com**
+GitHub: **https://github.com/GalSarIL/portfolio**
 
 ---
 
@@ -10,18 +11,19 @@ Live at: **https://galsaril.com**
 
 - **Frontend**: Vanilla HTML / CSS / JavaScript (no frameworks, no build step)
 - **Fonts**: Inter + Fira Code via Google Fonts
-- **Hosting**: Cloudflare Pages (free tier)
+- **Hosting**: Cloudflare Pages (free tier, unlimited requests)
 - **Domain**: galsaril.com (GoDaddy, DNS managed by Cloudflare)
 - **SSL**: Cloudflare Universal SSL (automatic, free)
-- **CI/CD**: Local Jenkins polling this repo, deploys to Cloudflare Pages on change
+- **CI/CD**: Local Jenkins polling this GitHub repo, deploys to Cloudflare Pages on push
 
 ---
 
 ## Project Structure
 
 ```
-portfolio/              <- this repo
-├── Jenkinsfile         # CI/CD pipeline definition
+portfolio/              <- this repo (github.com/GalSarIL/portfolio)
+├── Jenkinsfile         # CI/CD pipeline: checkout → deploy → smoke test
+├── wrangler.toml       # Cloudflare Pages project config
 ├── README.md
 └── site/
     ├── index.html      # Single-page homepage
@@ -53,7 +55,7 @@ portfolio/              <- this repo
 
 ## Local Development
 
-Local dev setup lives outside this repo. Requires Docker Desktop.
+Local dev setup lives outside this repo. Requires Docker Desktop (configured to auto-start on login).
 
 ```bash
 # From the parent opt/ directory
@@ -73,14 +75,25 @@ Changes to `site/` reflect immediately on browser refresh (volume mount, no rebu
 ## CI/CD Pipeline
 
 Jenkins runs locally and polls this GitHub repo every minute.
-On any push to `main`, it deploys `site/` to Cloudflare Pages via Wrangler CLI.
+On any push to `main`, the pipeline runs three stages:
+
+1. **Checkout** — pulls latest from GitHub
+2. **Deploy** — pushes `site/` to Cloudflare Pages via Wrangler CLI
+3. **Smoke Test** — verifies HTTP 200 and expected content on live site
 
 **Required Jenkins credentials (stored in Jenkins, never in code):**
 
 | ID | Description |
 |---|---|
-| `cloudflare-api-token` | Cloudflare API token with Pages:Edit permission |
-| `cloudflare-account-id` | Cloudflare Account ID |
+| `cloudflare-api-token` | Cloudflare API token with Pages:Write permission |
+| `cloudflare-account-id` | Cloudflare Account ID (`bd6ba2ce028cbe4fa971a70335b715bf`) |
+
+**Jenkins jobs:**
+
+| Job | Purpose |
+|---|---|
+| `portfolio-deploy` | Main deploy pipeline, triggered on SCM change |
+| `site-monitor` | Hourly uptime check — fails build if site returns non-200 |
 
 ---
 
@@ -89,15 +102,16 @@ On any push to `main`, it deploys `site/` to Cloudflare Pages via Wrangler CLI.
 - Domain registered at **GoDaddy**
 - Nameservers pointed to **Cloudflare**
 - Cloudflare manages DNS, CDN, DDoS protection, and SSL
-- Custom domain connected via Cloudflare Pages - Custom Domains
-- HTTPS via Cloudflare Universal SSL (Full mode)
+- `galsaril.com` and `www.galsaril.com` both connected as custom domains on Cloudflare Pages
+- HTTPS via Cloudflare Universal SSL
 
 ---
 
 ## TODO
 
-- [ ] Push to GitHub and connect Jenkins pipeline
 - [ ] Add profile photo
 - [ ] Projects section
 - [ ] Contact form
 - [ ] Blog / articles page
+- [ ] Slack/email alert on monitor failure
+- [ ] PR preview deployments
