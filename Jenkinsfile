@@ -4,6 +4,7 @@ pipeline {
     environment {
         CLOUDFLARE_API_TOKEN  = credentials('cloudflare-api-token')
         CLOUDFLARE_ACCOUNT_ID = credentials('cloudflare-account-id')
+        SLACK_WEBHOOK         = credentials('slack-webhook')
     }
 
     triggers {
@@ -49,10 +50,10 @@ pipeline {
 
     post {
         success {
-            echo 'Deployed and verified galsaril.com'
+            sh """curl -s -X POST "${SLACK_WEBHOOK}" -H "Content-Type: application/json" --data '{"text":":white_check_mark: *portfolio-deploy* passed — galsaril.com is live and verified."}'"""
         }
         failure {
-            echo 'Pipeline failed - check deploy or smoke test output'
+            sh """curl -s -X POST "${SLACK_WEBHOOK}" -H "Content-Type: application/json" --data '{"text":":red_circle: *portfolio-deploy* FAILED — check Jenkins: http://localhost:8081/job/portfolio-deploy/"}'"""
         }
     }
 }
