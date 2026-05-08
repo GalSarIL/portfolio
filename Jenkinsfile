@@ -19,7 +19,7 @@ pipeline {
 
         stage('Deploy to Cloudflare') {
             steps {
-                sh 'wrangler pages deploy site/ --project-name=galsaril --branch=main'
+                sh 'wrangler deploy'
             }
         }
     }
