@@ -15,6 +15,8 @@ GitHub: **https://github.com/GalSarIL/portfolio**
 - **Domain**: galsaril.com (GoDaddy, DNS managed by Cloudflare)
 - **SSL**: Cloudflare Universal SSL (automatic, free)
 - **CI/CD**: Local Jenkins polling this GitHub repo, deploys to Cloudflare Pages on push
+- **Analytics**: Custom event tracking — fire-and-forget beacons to `api.galsaril.com/track`, stored in Cloudflare D1
+- **Admin**: Private dashboard at `admin.galsaril.com` — analytics, uptime monitoring, auth
 
 ---
 
@@ -30,7 +32,7 @@ portfolio/              <- this repo (github.com/GalSarIL/portfolio)
     ├── css/
     │   └── style.css   # Dark theme, responsive layout
     └── js/
-        └── main.js     # Particles, typing effect, scroll animations
+        └── main.js     # Particles, typing effect, scroll animations, analytics beacon
 
 ../                     <- local dev only, not in repo
 ├── docker-compose.yml  # Runs nginx (site preview) + Jenkins locally
@@ -94,6 +96,8 @@ On any push to `main`, the pipeline runs three stages:
 |---|---|
 | `portfolio-deploy` | Main deploy pipeline, triggered on SCM change |
 | `site-monitor` | Hourly uptime check — fails build if site returns non-200 |
+| `worker-deploy` | Deploys CF Worker backend (`opt/worker/`) to `api.galsaril.com` |
+| `admin-deploy` | Deploys admin dashboard (`opt/admin/site/`) to `admin.galsaril.com` |
 
 ---
 

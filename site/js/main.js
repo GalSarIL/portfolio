@@ -132,8 +132,57 @@ navLinks.querySelectorAll('a').forEach(a => {
    ============================================ */
 const observer = new IntersectionObserver(entries => {
     entries.forEach(e => {
-        if (e.isIntersecting) e.target.classList.add('visible');
+        if (e.isIntersecting) {
+            e.target.classList.add('visible');
+            const section = e.target.closest('[data-section]')?.dataset.section;
+            if (section) track('section_view', { section });
+        }
     });
 }, { threshold: 0.1 });
 
 document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+/* ============================================
+   ANALYTICS TRACKING
+   ============================================ */
+(function () {
+    const API = 'https://api.galsaril.com/track';
+    const SESSION_KEY = 'gal_sid';
+    const SESSION_TTL = 30 * 60 * 1000;
+
+    function getSession() {
+        try {
+            const raw = localStorage.getItem(SESSION_KEY);
+            if (raw) {
+                const { id, ts } = JSON.parse(raw);
+                if (Date.now() - ts < SESSION_TTL) {
+                    localStorage.setItem(SESSION_KEY, JSON.stringify({ id, ts: Date.now() }));
+                    return id;
+                }
+            }
+        } catch (_) {}
+        const id = crypto.randomUUID();
+        try { localStorage.setItem(SESSION_KEY, JSON.stringify({ id, ts: Date.now() })); } catch (_) {}
+        return id;
+    }
+
+    const sessionId = getSession();
+
+    window.track = function (name, props = {}) {
+        try {
+            navigator.sendBeacon(API, JSON.stringify({
+                name, props,
+                path: location.pathname,
+                referrer: document.referrer,
+                session_id: sessionId,
+                ts: Date.now(),
+            }));
+        } catch (_) {}
+    };
+
+    track('page_view');
+
+    document.querySelectorAll('[data-track]').forEach(el => {
+        el.addEventListener('click', () => track('contact_click', { target: el.dataset.track }));
+    });
+}());
