@@ -4,7 +4,7 @@ pipeline {
     environment {
         CLOUDFLARE_API_TOKEN  = credentials('cloudflare-api-token')
         CLOUDFLARE_ACCOUNT_ID = credentials('cloudflare-account-id')
-        SLACK_WEBHOOK         = credentials('slack-webhook')
+        SLACK_BOT_TOKEN       = credentials('slack-bot-token')
     }
 
     triggers {
@@ -50,10 +50,16 @@ pipeline {
 
     post {
         success {
-            sh """curl -s -X POST "${SLACK_WEBHOOK}" -H "Content-Type: application/json" --data '{"text":":white_check_mark: *portfolio-deploy* passed — galsaril.com is live and verified."}'"""
+            script {
+                def channel = env.BRANCH_NAME == 'main' ? 'jenkins-prod' : 'jenkins-dev'
+                sh """curl -s -X POST "https://slack.com/api/chat.postMessage" -H "Authorization: Bearer ${SLACK_BOT_TOKEN}" -H "Content-Type: application/json" --data '{"channel":"${channel}","text":":white_check_mark: *portfolio-deploy* passed — galsaril.com is live and verified."}'"""
+            }
         }
         failure {
-            sh """curl -s -X POST "${SLACK_WEBHOOK}" -H "Content-Type: application/json" --data '{"text":":red_circle: *portfolio-deploy* FAILED — check Jenkins: http://localhost:8081/job/portfolio-deploy/"}'"""
+            script {
+                def channel = env.BRANCH_NAME == 'main' ? 'jenkins-prod' : 'jenkins-dev'
+                sh """curl -s -X POST "https://slack.com/api/chat.postMessage" -H "Authorization: Bearer ${SLACK_BOT_TOKEN}" -H "Content-Type: application/json" --data '{"channel":"${channel}","text":":red_circle: *portfolio-deploy* FAILED — check Jenkins: http://localhost:8081/job/portfolio-deploy/"}'"""
+            }
         }
     }
 }
